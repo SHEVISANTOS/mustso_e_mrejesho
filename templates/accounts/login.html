@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Login - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="mb-3 text-center" style="color: var(--must-green);">
+                    <i class="fa-solid fa-graduation-cap"></i> MUST e-Mrejesho
+                </h4>
+                <p class="text-muted text-center mb-4">Mfumo wa Kutuma, Kupokea na Kushughulikia Malalamiko, Mapendekezo, Maulizo na Pongezi</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        {{ form.username }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        {{ form.password }}
+                    </div>
+                    {% if form.errors %}
+                        <div class="alert alert-danger py-2">Invalid username or password.</div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-must w-100">Login</button>
+                </form>
+                <p class="text-center mt-3 mb-0">
+                    <a href="{% url 'accounts:register' %}">Register as a student/staff</a>
+                </p>
+                <p class="text-center mt-2 mb-0">
+                    <a href="/admin/login/" class="text-muted"><small><i class="fa-solid fa-user-shield"></i> Admin Login</small></a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

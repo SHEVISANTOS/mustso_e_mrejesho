@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        {% if user.role == "STUDENT" %}My Feedback{% else %}Feedback Inbox — {{ user.get_role_display }}{% endif %}
+        <span id="live-indicator" class="badge bg-success ms-2" style="font-size:.6rem;"><i class="fa-solid fa-circle fa-2xs"></i> LIVE</span>
+    </h4>
+    {% if user.role == "STUDENT" %}
+    <a href="{% url 'feedback:submit' %}" class="btn btn-must"><i class="fa-solid fa-plus"></i> Submit Feedback</a>
+    {% endif %}
+</div>
+
+<div class="row mb-4 g-3">
+    <div class="col-6 col-lg">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Total</small><h4 id="stat-total">{{ counts.total }}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Submitted</small><h4 id="stat-submitted">{{ counts.submitted }}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">In Progress</small><h4 id="stat-in_progress">{{ counts.in_progress }}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Escalated</small><h4 id="stat-escalated">{{ counts.escalated }}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Resolved</small><h4 id="stat-resolved">{{ counts.resolved }}</h4></div></div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Resolution Status</h6>
+                <canvas id="statusChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="mb-2">
+            <a href="?" class="btn btn-sm {% if not active_status %}btn-must{% else %}btn-outline-secondary{% endif %}">All</a>
+            {% for value, label in status_choices %}
+                <a href="?status={{ value }}" class="btn btn-sm {% if active_status == value %}btn-must{% else %}btn-outline-secondary{% endif %}">{{ label }}</a>
+            {% endfor %}
+        </div>
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Tracking #</th>
+                            <th>Subject</th>
+                            <th>Category</th>
+                            <th>Department</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedback-table-body">
+                        {% for fb in feedback_list %}
+                        <tr style="cursor:pointer" onclick="window.location='{% url 'feedback:detail' fb.pk %}'">
+                            <td class="fw-semibold">{{ fb.tracking_number }}</td>
+                            <td>{{ fb.subject }}</td>
+                            <td>{{ fb.get_category_display }}</td>
+                            <td>{{ fb.department.name }}</td>
+                            <td class="status-{{ fb.status }}"><i class="fa-solid fa-circle fa-xs"></i> {{ fb.get_status_display }}</td>
+                            <td>{{ fb.get_priority_display }}</td>
+                            <td>{{ fb.created_at|date:"d M Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr id="empty-row"><td colspan="7" class="text-center text-muted py-4">No feedback items yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+    const statusColors = ['#6c757d', '#0d6efd', '#fd7e14', '#198754'];
+    const ctx = document.getElementById('statusChart');
+    let statusChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Submitted', 'In Progress', 'Escalated', 'Resolved'],
+            datasets: [{
+                data: [{{ counts.submitted }}, {{ counts.in_progress }}, {{ counts.escalated }}, {{ counts.resolved }}],
+                backgroundColor: statusColors,
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function refreshDashboard() {
+        const params = new URLSearchParams(window.location.search);
+        fetch("{% url 'feedback:dashboard_data' %}?" + params.toString())
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('stat-total').textContent = data.counts.total;
+                document.getElementById('stat-submitted').textContent = data.counts.submitted;
+                document.getElementById('stat-in_progress').textContent = data.counts.in_progress;
+                document.getElementById('stat-escalated').textContent = data.counts.escalated;
+                document.getElementById('stat-resolved').textContent = data.counts.resolved;
+
+                statusChart.data.datasets[0].data = [
+                    data.counts.submitted, data.counts.in_progress,
+                    data.counts.escalated, data.counts.resolved
+                ];
+                statusChart.update();
+
+                const tbody = document.getElementById('feedback-table-body');
+                if (data.items.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No feedback items yet.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = data.items.map(fb => `
+                    <tr style="cursor:pointer" onclick="window.location='${fb.url}'">
+                        <td class="fw-semibold">${escapeHtml(fb.tracking_number)}</td>
+                        <td>${escapeHtml(fb.subject)}</td>
+                        <td>${escapeHtml(fb.category)}</td>
+                        <td>${escapeHtml(fb.department)}</td>
+                        <td class="status-${fb.status}"><i class="fa-solid fa-circle fa-xs"></i> ${escapeHtml(fb.status_display)}</td>
+                        <td>${escapeHtml(fb.priority)}</td>
+                        <td>${escapeHtml(fb.created_at)}</td>
+                    </tr>
+                `).join('');
+            })
+            .catch(() => {});
+    }
+
+    setInterval(refreshDashboard, 30000);  // fallback only — WebSocket drives instant updates
+
+    (function connectDashboardSocket() {
+        const scheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const socket = new WebSocket(`${scheme}://${window.location.host}/ws/dashboard/`);
+        socket.onmessage = (e) => {
+            const data = JSON.parse(e.data);
+            if (data.type === 'refresh') refreshDashboard();
+        };
+        socket.onclose = () => setTimeout(connectDashboardSocket, 3000);
+    })();
+</script>
+{% endblock %}

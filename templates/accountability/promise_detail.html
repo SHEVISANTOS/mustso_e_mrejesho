@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}{{ promise.title }} - Promises Tracker - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'accountability:promise_dashboard' %}" class="text-success text-decoration-none">Promises Tracker</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Promise Detail</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <div class="col-lg-8 mb-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+                    <div>
+                        <span class="badge 
+                            {% if promise.status == 'COMPLETED' %}bg-success text-white
+                            {% elif promise.status == 'IN_PROGRESS' %}bg-primary text-white
+                            {% elif promise.status == 'STALLED' %}bg-danger text-white
+                            {% else %}bg-secondary text-white{% endif %} rounded-pill px-3 py-1.5 mb-2" style="font-size:0.85rem;">
+                            {{ promise.get_status_display }}
+                        </span>
+                        <span class="badge bg-light text-dark border ms-1 rounded-pill px-3 py-1.5 mb-2" style="font-size:0.85rem;">
+                            <i class="fa-solid fa-tag me-1 text-muted"></i>{{ promise.get_category_display }}
+                        </span>
+                    </div>
+                    
+                    {% if can_edit %}
+                    <a href="{% url 'accountability:promise_edit' promise.pk %}" class="btn btn-outline-success btn-sm">
+                        <i class="fa-solid fa-pen-to-square me-1"></i> Edit Promise
+                    </a>
+                    {% endif %}
+                </div>
+
+                <h3 class="fw-bold mb-3">{{ promise.title }}</h3>
+                
+                <h6 class="fw-bold text-uppercase text-muted" style="font-size: 0.75rem;">Description</h6>
+                <div class="lead text-dark mb-4 fs-6" style="white-space: pre-wrap; line-height: 1.6;">{{ promise.description }}</div>
+
+                {% if promise.evidence or promise.evidence_file %}
+                <div class="card bg-light border-0 rounded p-3 mt-4">
+                    <h6 class="fw-bold text-success mb-2">
+                        <i class="fa-solid fa-circle-info me-1"></i> Progress Evidence
+                    </h6>
+                    
+                    {% if promise.evidence %}
+                    <p class="text-dark small mb-3" style="white-space: pre-wrap;">{{ promise.evidence }}</p>
+                    {% endif %}
+
+                    {% if promise.evidence_file %}
+                    <div class="d-flex align-items-center">
+                        <div class="p-2 bg-success-subtle text-success rounded me-2">
+                            <i class="fa-solid fa-file-arrow-down fa-lg"></i>
+                        </div>
+                        <div>
+                            <small class="d-block text-muted">Proof / Attached Document</small>
+                            <a href="{{ promise.evidence_file.url }}" target="_blank" class="text-success text-decoration-none fw-semibold small">
+                                Download Evidence File
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% elif promise.status == 'COMPLETED' %}
+                <div class="alert alert-warning py-2 small mt-4">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i> This promise was marked completed, but no evidence has been uploaded yet.
+                </div>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white border-top-0 px-4 py-3 d-flex justify-content-between align-items-center text-muted small">
+                <span>Created: {{ promise.created_at|date:"d M Y, H:i" }}</span>
+                <span>Last updated: {{ promise.updated_at|date:"d M Y, H:i" }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Representative Info Card -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 text-center p-4 mb-4">
+            <div class="d-flex justify-content-center mb-3">
+                {% if promise.representative.rep_profile.profile_picture %}
+                <img src="{{ promise.representative.rep_profile.profile_picture.url }}" alt="{{ promise.representative.get_full_name }}" class="rounded-circle border" style="width: 100px; height: 100px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white border" style="width: 100px; height: 100px; font-size: 3rem;">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <h5 class="fw-bold mb-1">{{ promise.representative.get_full_name|default:promise.representative.username }}</h5>
+            <span class="badge badge-must mb-3">{{ promise.representative.get_role_display }}</span>
+            
+            <table class="table table-sm text-start table-borderless mt-2 small">
+                <tr>
+                    <td class="text-muted fw-semibold">Department:</td>
+                    <td>{{ promise.representative.department.name|default:"General Administration" }}</td>
+                </tr>
+                <tr>
+                    <td class="text-muted fw-semibold">Target Date:</td>
+                    <td>
+                        {% if promise.target_date %}
+                            {{ promise.target_date|date:"d M Y" }}
+                        {% else %}
+                            <span class="text-muted italic">Not specified</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+
+            <a href="{% url 'accountability:rep_detail' promise.representative.pk %}" class="btn btn-must w-100 mt-2 btn-sm">
+                <i class="fa-solid fa-address-card me-1"></i> View Profile & Metrics
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

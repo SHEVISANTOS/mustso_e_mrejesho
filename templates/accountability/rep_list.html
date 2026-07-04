@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Student Representatives Profiles - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-1"><i class="fa-solid fa-user-tie text-success me-2"></i>Student Government Representatives</h4>
+    <p class="text-muted small">Meet your student government representatives, browse their bios, goals, and track their performance metrics.</p>
+</div>
+
+<div class="row g-4">
+    {% for rep in representatives %}
+    <div class="col-md-4 col-sm-6">
+        <div class="card h-100 shadow-sm border-0 transition hover-shadow">
+            <div class="card-body p-4 text-center d-flex flex-column h-100">
+                <div class="d-flex justify-content-center mb-3">
+                    {% if rep.rep_profile.profile_picture %}
+                    <img src="{{ rep.rep_profile.profile_picture.url }}" alt="{{ rep.get_full_name }}" class="rounded-circle border border-2 border-success-subtle" style="width: 90px; height: 90px; object-fit: cover;">
+                    {% else %}
+                    <div class="rounded-circle bg-secondary-subtle text-secondary border border-2 border-secondary-subtle d-flex align-items-center justify-content-center" style="width: 90px; height: 90px; font-size: 2.5rem;">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="fw-bold mb-1 card-title">{{ rep.get_full_name|default:rep.username }}</h5>
+                <p class="text-muted small mb-2"><span class="badge badge-must">{{ rep.get_role_display }}</span></p>
+                
+                <p class="small mb-3 text-dark fw-semibold" style="font-size:0.8rem;">
+                    <i class="fa-solid fa-building-circle-check text-muted me-1"></i>{{ rep.department.name|default:"General Administration" }}
+                </p>
+
+                <!-- Representative short stats teaser -->
+                <div class="bg-light rounded p-3 mb-4 text-start mt-auto">
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted"><i class="fa-solid fa-square-check me-1"></i>Resolved Issues</small>
+                        <small class="fw-bold text-success">{{ rep.resolved_cases }}</small>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-muted"><i class="fa-solid fa-handshake me-1"></i>Promises Met</small>
+                        <small class="fw-bold text-dark">{{ rep.completed_promises }}/{{ rep.total_promises }}</small>
+                    </div>
+                </div>
+
+                <a href="{% url 'accountability:rep_detail' rep.pk %}" class="btn btn-must w-100 btn-sm">
+                    <i class="fa-solid fa-address-card me-1"></i> View Profile & Metrics
+                </a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="fa-solid fa-users-slash fa-3x mb-3 text-secondary"></i>
+        <p class="mb-0">No representatives or admins found in the system.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+        transform: translateY(-2px);
+    }
+    .transition {
+        transition: all 0.2s ease-in-out;
+    }
+</style>
+{% endblock %}

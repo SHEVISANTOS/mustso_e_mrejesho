@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ fb.tracking_number }} - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<a href="{% url 'feedback:dashboard' %}" class="btn btn-sm btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Back</a>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="mb-0">{{ fb.subject }}</h5>
+                    <span class="status-{{ fb.status }} fw-semibold"><i class="fa-solid fa-circle fa-xs"></i> {{ fb.get_status_display }}</span>
+                </div>
+                <p class="text-muted mb-3">
+                    {{ fb.tracking_number }} &middot; {{ fb.get_category_display }} &middot; {{ fb.department.name }}
+                    &middot; Priority: {{ fb.get_priority_display }} &middot; Level: {{ fb.get_escalation_level_display }}
+                </p>
+                <p>{{ fb.description|linebreaks }}</p>
+                {% if fb.attachment %}
+                    <a href="{{ fb.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                        <i class="fa-solid fa-paperclip"></i> View attachment
+                    </a>
+                {% endif %}
+                <p class="text-muted mt-3 mb-0"><small>
+                    Submitted by {% if fb.is_anonymous %}Anonymous{% else %}{{ fb.submitted_by.get_full_name|default:fb.submitted_by.username }}{% endif %}
+                    on {{ fb.created_at|date:"d M Y, H:i" }}
+                </small></p>
+            </div>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-white">Timeline</div>
+            <ul class="list-group list-group-flush">
+                {% for u in updates %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ u.actor.get_full_name|default:u.actor.username }}</strong>
+                        <small class="text-muted">{{ u.created_at|date:"d M Y, H:i" }}</small>
+                    </div>
+                    <span class="badge bg-light text-dark border">{{ u.get_update_type_display }}</span>
+                    <p class="mb-0 mt-1">{{ u.message }}</p>
+                </li>
+                {% empty %}
+                <li class="list-group-item text-muted">No activity yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        {% if can_act %}
+        <div class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h6>Add Comment / Response</h6>
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="comment">
+                    {{ comment_form.message }}
+                    <button type="submit" class="btn btn-must btn-sm mt-2">Post</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        {% if can_act and fb.status not in "RESOLVED,CLOSED,REJECTED" %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h6>Actions</h6>
+
+                {% if fb.escalation_level < 2 %}
+                <form method="post" class="mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="escalate">
+                    {{ escalation_form.reason }}
+                    <button type="submit" class="btn btn-outline-warning btn-sm w-100 mt-2">
+                        <i class="fa-solid fa-arrow-up"></i> Escalate to Admin
+                    </button>
+                </form>
+                {% endif %}
+
+                <form method="post" class="mb-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="resolve">
+                    <button type="submit" class="btn btn-success btn-sm w-100">
+                        <i class="fa-solid fa-check"></i> Mark Resolved
+                    </button>
+                </form>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="close">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="fa-solid fa-lock"></i> Close Case
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6>Assigned To</h6>
+                <p class="mb-0">{{ fb.assigned_to.get_full_name|default:"Unassigned" }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

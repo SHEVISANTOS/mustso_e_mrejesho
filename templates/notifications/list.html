@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Notifications - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<h4 class="mb-4"><i class="fa-solid fa-bell"></i> Notifications</h4>
+<div class="card shadow-sm">
+    <ul class="list-group list-group-flush">
+        {% for n in notifications %}
+        <li class="list-group-item {% if not n.is_read %}bg-light{% endif %}">
+            <a href="{% url 'notifications:mark_read' n.pk %}" class="text-decoration-none text-dark d-block">
+                <div class="d-flex justify-content-between">
+                    <span class="badge bg-light text-dark border">{{ n.get_event_type_display }}</span>
+                    <small class="text-muted">{{ n.created_at|date:"d M Y, H:i" }}</small>
+                </div>
+                <p class="mb-0 mt-1">{{ n.message }}</p>
+            </a>
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted text-center py-4">No notifications yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

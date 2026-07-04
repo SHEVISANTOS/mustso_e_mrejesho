@@ -1,0 +1,8 @@
+asgiref==3.11.1
+autobahn==26.6.2
+channels==4.3.2
+daphne==4.2.2
+Django==6.0.6
+django-jazzmin==3.0.5
+Twisted==26.4.0
+python-dotenv==1.0.1

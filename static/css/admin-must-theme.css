@@ -1,0 +1,18 @@
+/* Overrides Bootstrap's success color (used by Jazzmin's primary buttons,
+   since JAZZMIN_UI_TWEAKS already maps "primary" -> "btn-success")
+   from flatly's default teal to MUST's brand green. */
+:root {
+    --bs-success: #0a5c36;
+    --bs-success-rgb: 10, 92, 54;
+}
+.btn-success {
+    background-color: #0a5c36 !important;
+    border-color: #0a5c36 !important;
+}
+.btn-success:hover, .btn-success:focus {
+    background-color: #084a2b !important;
+    border-color: #084a2b !important;
+}
+.login-page, .register-page {
+    background: #f4f6f5;
+}

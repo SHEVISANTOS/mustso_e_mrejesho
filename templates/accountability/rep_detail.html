@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}{{ rep.get_full_name }} - Representative Profile - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'accountability:rep_list' %}" class="text-success text-decoration-none">Representatives</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Profile Detail</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Left Column: Profile Card & Promises -->
+    <div class="col-lg-4 mb-4">
+        <div class="card shadow-sm border-0 text-center p-4 mb-4">
+            <div class="d-flex justify-content-center mb-3">
+                {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="{{ rep.get_full_name }}" class="rounded-circle border" style="width: 120px; height: 120px; object-fit: cover;">
+                {% else %}
+                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white border" style="width: 120px; height: 120px; font-size: 3.5rem;">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <h4 class="fw-bold mb-1">{{ rep.get_full_name|default:rep.username }}</h4>
+            <span class="badge badge-must mb-3 fs-7">{{ rep.get_role_display }}</span>
+
+            <table class="table table-sm text-start table-borderless mt-2 small">
+                <tr>
+                    <td class="text-muted fw-semibold">Department:</td>
+                    <td>{{ rep.department.name|default:"General Administration" }}</td>
+                </tr>
+                <tr>
+                    <td class="text-muted fw-semibold">Email:</td>
+                    <td>{{ rep.email|default:"N/A" }}</td>
+                </tr>
+                <tr>
+                    <td class="text-muted fw-semibold">Phone:</td>
+                    <td>{{ rep.phone_number|default:"N/A" }}</td>
+                </tr>
+            </table>
+
+            {% if can_edit %}
+            <a href="{% url 'accountability:rep_profile_edit' rep.pk %}" class="btn btn-outline-success w-100 btn-sm mt-3">
+                <i class="fa-solid fa-user-pen me-1"></i> Edit Profile
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- Promises List Card -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h6 class="fw-bold border-bottom pb-2 mb-3">
+                    <i class="fa-solid fa-handshake text-success me-1"></i>Campaign Promises ({{ metrics.total_promises }})
+                </h6>
+                {% if promises %}
+                <div class="list-group list-group-flush">
+                    {% for promise in promises %}
+                    <a href="{% url 'accountability:promise_detail' promise.pk %}" class="list-group-item list-group-item-action border-0 px-1 py-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-semibold text-dark small">{{ promise.title|truncatechars:35 }}</span>
+                            <span class="badge 
+                                {% if promise.status == 'COMPLETED' %}bg-success-subtle text-success
+                                {% elif promise.status == 'IN_PROGRESS' %}bg-primary-subtle text-primary
+                                {% elif promise.status == 'STALLED' %}bg-danger-subtle text-danger
+                                {% else %}bg-secondary-subtle text-secondary{% endif %}" style="font-size:0.65rem;">
+                                {{ promise.get_status_display }}
+                            </span>
+                        </div>
+                        <small class="text-muted text-truncate d-block">{{ promise.description|truncatewords:8 }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-muted small text-center py-3 mb-0">No promises registered for this representative.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Bio, Goals, Manifesto & Engagement Metrics -->
+    <div class="col-lg-8">
+        <!-- Engagement Metrics Section -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-success border-bottom pb-2 mb-3">
+                    <i class="fa-solid fa-chart-line me-2"></i>Performance & Engagement Metrics
+                </h5>
+                
+                <div class="row g-3">
+                    <!-- Case Resolution Rate -->
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold text-muted small"><i class="fa-solid fa-circle-check text-success me-1"></i>Case Resolution Rate</span>
+                                <span class="fw-bold text-success" style="font-size: 1.1rem;">{{ metrics.case_rate }}%</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ metrics.case_rate }}%" aria-valuenow="{{ metrics.case_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <small class="text-muted" style="font-size:0.75rem;">Resolved {{ metrics.resolved_count }} out of {{ metrics.total_assigned }} assigned cases</small>
+                        </div>
+                    </div>
+                    
+                    <!-- Campaign Promise Fulfillment -->
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold text-muted small"><i class="fa-solid fa-handshake text-primary me-1"></i>Promises Met Rate</span>
+                                <span class="fw-bold text-primary" style="font-size: 1.1rem;">{{ metrics.promise_rate }}%</span>
+                            </div>
+                            <div class="progress mb-2" style="height: 6px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ metrics.promise_rate }}%" aria-valuenow="{{ metrics.promise_rate }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                            <small class="text-muted" style="font-size:0.75rem;">Fulfilled {{ metrics.completed_promises }} out of {{ metrics.total_promises }} promises</small>
+                        </div>
+                    </div>
+
+                    <!-- Avg Resolution Time -->
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light p-3 h-100">
+                            <small class="text-muted fw-semibold mb-1"><i class="fa-solid fa-clock text-warning me-1"></i>Avg. Resolution Time</small>
+                            <h4 class="fw-bold mb-0 text-dark">{{ metrics.avg_resolution_hours }} <span style="font-size:0.9rem; font-weight:normal;">hours</span></h4>
+                            <small class="text-muted d-block mt-2" style="font-size:0.75rem;">Average duration to mark assigned feedback as resolved</small>
+                        </div>
+                    </div>
+
+                    <!-- Communication Activity -->
+                    <div class="col-md-6">
+                        <div class="card border-0 bg-light p-3 h-100">
+                            <small class="text-muted fw-semibold mb-1"><i class="fa-solid fa-comments text-info me-1"></i>Communication Activity</small>
+                            <h4 class="fw-bold mb-0 text-dark">{{ metrics.comments_count }} <span style="font-size:0.9rem; font-weight:normal;">comments</span></h4>
+                            <small class="text-muted d-block mt-2" style="font-size:0.75rem;">Total feedback updates/comments posted in discussion threads</small>
+                        </div>
+                    </div>
+                </div>
+
+                {% if rep.department %}
+                <div class="alert alert-secondary bg-light border-0 rounded p-2.5 mt-3 mb-0 d-flex justify-content-between align-items-center" style="font-size:0.8rem;">
+                    <span><i class="fa-solid fa-building text-secondary me-1"></i>Department ({{ rep.department.code }}) Resolution Rate:</span>
+                    <strong class="text-success">{{ metrics.dept_rate }}% ({{ metrics.dept_total }} total cases)</strong>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Biography & Goals -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4">
+                <h5 class="fw-bold text-success border-bottom pb-2 mb-3">Biography & Goals</h5>
+                
+                <h6 class="fw-semibold text-muted text-uppercase mb-2" style="font-size: 0.75rem;">Biographical Bio</h6>
+                {% if profile.bio %}
+                <p class="text-dark mb-4" style="white-space: pre-wrap; line-height:1.6;">{{ profile.bio }}</p>
+                {% else %}
+                <p class="text-muted small mb-4 italic">No bio written yet.</p>
+                {% endif %}
+
+                <h6 class="fw-semibold text-muted text-uppercase mb-2" style="font-size: 0.75rem;">Tenure Goals & Objectives</h6>
+                {% if goals_list %}
+                <ul class="list-group list-group-flush mb-4">
+                    {% for goal in goals_list %}
+                    <li class="list-group-item border-0 px-0 py-1.5 d-flex align-items-start">
+                        <i class="fa-solid fa-circle-chevron-right text-success mt-1 me-2" style="font-size: 0.85rem;"></i>
+                        <span>{{ goal }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted small mb-4 italic">No tenure goals listed yet.</p>
+                {% endif %}
+
+                <h6 class="fw-semibold text-muted text-uppercase mb-2" style="font-size: 0.75rem;">Campaign Manifesto</h6>
+                {% if profile.manifesto %}
+                <p class="text-dark mb-0 bg-light rounded p-3 small" style="white-space: pre-wrap; line-height:1.5;">{{ profile.manifesto }}</p>
+                {% else %}
+                <p class="text-muted small mb-0 italic">No manifesto details uploaded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h5 class="mb-4" style="color: var(--must-green);">{{ title }}</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        {{ form.name }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Code</label>
+                        {{ form.code }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="form-check mb-3">
+                        {{ form.is_active }}
+                        <label class="form-check-label">Active (visible to students when submitting feedback)</label>
+                    </div>
+                    {% if form.errors %}
+                        <div class="alert alert-danger py-2">
+                            {% for field in form %}{% for error in field.errors %}<div>{{ field.label }}: {{ error }}</div>{% endfor %}{% endfor %}
+                        </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-must"><i class="fa-solid fa-check"></i> Save</button>
+                    <a href="{% url 'adminpanel:department_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

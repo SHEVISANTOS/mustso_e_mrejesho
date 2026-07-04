@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Submit Feedback - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h4 class="mb-4" style="color: var(--must-green);"><i class="fa-solid fa-paper-plane"></i> Submit Feedback</h4>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        {{ form.category }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        {{ form.department }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        {{ form.subject }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Attachment (optional)</label>
+                        {{ form.attachment }}
+                    </div>
+                    <div class="form-check mb-3">
+                        {{ form.is_anonymous }}
+                        <label class="form-check-label">Submit anonymously (your identity is hidden from the department)</label>
+                    </div>
+                    {% if form.errors %}<div class="alert alert-danger py-2">Please correct the errors below.</div>{% endif %}
+                    <button type="submit" class="btn btn-must"><i class="fa-solid fa-check"></i> Submit</button>
+                    <a href="{% url 'feedback:dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

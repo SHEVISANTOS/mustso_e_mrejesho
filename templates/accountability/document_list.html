@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Public Document Repository - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <h4 class="mb-0">
+        <i class="fa-solid fa-folder-open text-success me-2"></i>Public Document Repository
+    </h4>
+    {% if can_upload %}
+    <a href="{% url 'accountability:document_upload' %}" class="btn btn-must">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Upload Document
+    </a>
+    {% endif %}
+</div>
+
+<!-- Search & Category Filters -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0 py-2" placeholder="Search documents by title or description..." value="{{ search_query|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-3 col-8">
+                <select name="type" class="form-select py-2">
+                    <option value="">All Document Types</option>
+                    {% for value, label in doc_types %}
+                    <option value="{{ value }}" {% if active_type == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1 col-4">
+                <button type="submit" class="btn btn-must w-100 py-2">Search</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Document Cards List -->
+<div class="row g-3">
+    {% for doc in documents %}
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100 transition hover-shadow border-start border-4 
+            {% if doc.document_type == 'LEGISLATION' %}border-success
+            {% elif doc.document_type == 'MINUTES' %}border-warning
+            {% elif doc.document_type == 'FINANCIAL' or doc.document_type == 'BUDGET' %}border-info
+            {% else %}border-secondary{% endif %}">
+            <div class="card-body p-4 d-flex">
+                <div class="me-3 text-muted">
+                    {% if doc.document_type == 'LEGISLATION' %}
+                    <i class="fa-solid fa-scale-balanced fa-2x text-success"></i>
+                    {% elif doc.document_type == 'MINUTES' %}
+                    <i class="fa-regular fa-clipboard fa-2x text-warning"></i>
+                    {% elif doc.document_type == 'FINANCIAL' or doc.document_type == 'BUDGET' %}
+                    <i class="fa-solid fa-file-invoice-dollar fa-2x text-info"></i>
+                    {% else %}
+                    <i class="fa-regular fa-file-lines fa-2x"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h5 class="fw-bold mb-0" style="font-size:1.05rem;">{{ doc.title }}</h5>
+                    </div>
+                    
+                    <span class="badge bg-light text-dark border rounded-pill px-2 py-0.5 small mb-2" style="font-size:0.7rem;">
+                        {{ doc.get_document_type_display }}
+                    </span>
+                    
+                    <p class="text-muted small mb-3">
+                        {{ doc.description|default:"No description provided."|truncatewords:20 }}
+                    </p>
+                    
+                    <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-2" style="font-size:0.75rem;">
+                        <span class="text-muted">
+                            Uploaded: {{ doc.created_at|date:"d M Y" }} by {{ doc.uploaded_by.get_full_name|default:doc.uploaded_by.username }}
+                        </span>
+                        
+                        <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                            <i class="fa-solid fa-arrow-down-to-bracket"></i> Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center py-5 text-muted">
+        <i class="fa-solid fa-file-circle-xmark fa-3x mb-3 text-secondary"></i>
+        <p class="mb-0">No documents found in the repository.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+    }
+    .transition {
+        transition: all 0.2s ease-in-out;
+    }
+</style>
+{% endblock %}

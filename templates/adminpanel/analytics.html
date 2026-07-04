@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0"><i class="fa-solid fa-gauge-high"></i> Admin Analytics</h4>
+    <div>
+        <a href="{% url 'adminpanel:department_list' %}" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-building"></i> Departments</a>
+        <a href="{% url 'adminpanel:user_list' %}" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-users-cog"></i> Staff Accounts</a>
+        <a href="/admin/" target="_blank" class="btn btn-must btn-sm"><i class="fa-solid fa-toolbox"></i> Site Administration</a>
+    </div>
+</div>
+
+<div class="row mb-4 g-3">
+    <div class="col-6 col-lg-2">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Total Cases</small><h4>{{ kpis.total }}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Resolution Rate</small><h4>{{ kpis.resolution_rate }}%</h4></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Avg. Resolution</small><h4>{% if kpis.avg_hours %}{{ kpis.avg_hours }}h{% else %}—{% endif %}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">At Admin Level</small><h4>{{ kpis.escalated }}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Departments</small><h4>{{ kpis.departments }}</h4></div></div>
+    </div>
+    <div class="col-6 col-lg-2">
+        <div class="card card-stat shadow-sm"><div class="card-body py-2"><small class="text-muted">Representatives</small><h4>{{ kpis.representatives }}</h4></div></div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Cases by Department</h6>
+                <canvas id="deptChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">By Category</h6>
+                <canvas id="categoryChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">By Status</h6>
+                <canvas id="statusChart" height="220"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Submissions — Last 30 Days</h6>
+                <canvas id="trendChart" height="180"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h6 class="text-muted">Department Performance</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead><tr><th>Department</th><th>Total</th><th>Resolved</th></tr></thead>
+                        <tbody id="dept-performance-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+    const palette = ['#0a5c36', '#d4a017', '#0d6efd', '#fd7e14', '#dc3545', '#6f42c1', '#20c997', '#6c757d'];
+
+    const deptChart = new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: { labels: [], datasets: [{ label: 'Cases', data: [], backgroundColor: '#0a5c36' }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+    });
+
+    const categoryChart = new Chart(document.getElementById('categoryChart'), {
+        type: 'pie',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: palette }] },
+        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
+    });
+
+    const statusChart = new Chart(document.getElementById('statusChart'), {
+        type: 'doughnut',
+        data: { labels: [], datasets: [{ data: [], backgroundColor: palette }] },
+        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 10 } } } }
+    });
+
+    const trendChart = new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: { labels: [], datasets: [{ label: 'Submissions', data: [], borderColor: '#0a5c36', tension: 0.3, fill: true, backgroundColor: 'rgba(10,92,54,0.1)' }] },
+        options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+    });
+
+    const CATEGORY_LABELS = { COMPLAINT: 'Malalamiko', SUGGESTION: 'Mapendekezo', INQUIRY: 'Maulizo', COMPLIMENT: 'Pongezi' };
+    const STATUS_LABELS = { SUBMITTED: 'Submitted', IN_PROGRESS: 'In Progress', ESCALATED: 'Escalated', RESOLVED: 'Resolved', CLOSED: 'Closed', REJECTED: 'Rejected' };
+
+    function loadAnalytics() {
+        fetch("{% url 'adminpanel:analytics_data' %}")
+            .then(r => r.json())
+            .then(data => {
+                deptChart.data.labels = data.by_department.map(d => d.department__name || 'Unassigned');
+                deptChart.data.datasets[0].data = data.by_department.map(d => d.count);
+                deptChart.update();
+
+                categoryChart.data.labels = data.by_category.map(d => CATEGORY_LABELS[d.category] || d.category);
+                categoryChart.data.datasets[0].data = data.by_category.map(d => d.count);
+                categoryChart.update();
+
+                statusChart.data.labels = data.by_status.map(d => STATUS_LABELS[d.status] || d.status);
+                statusChart.data.datasets[0].data = data.by_status.map(d => d.count);
+                statusChart.update();
+
+                trendChart.data.labels = data.trend.map(d => d.day);
+                trendChart.data.datasets[0].data = data.trend.map(d => d.count);
+                trendChart.update();
+
+                const tbody = document.getElementById('dept-performance-body');
+                tbody.innerHTML = data.dept_performance.map(d => `
+                    <tr><td>${d.name}</td><td>${d.total_cases}</td><td>${d.resolved_cases}</td></tr>
+                `).join('') || '<tr><td colspan="3" class="text-muted text-center">No data yet</td></tr>';
+            })
+            .catch(() => {});
+    }
+
+    loadAnalytics();
+</script>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - MUST e-Mrejesho</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --must-green: #0a5c36; --must-gold: #d4a017; }
+        body { background: #f4f6f5; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        .navbar-must { background: var(--must-green); padding: 1rem 0; }
+        .navbar-must .navbar-brand { color: #fff !important; font-weight: bold; font-size: 1.25rem; }
+        .btn-must { background: var(--must-green); color: #fff; border: none; }
+        .btn-must:hover { background: #084a2b; color: #fff; }
+        input[type="text"], input[type="password"] {
+            display: block; width: 100%; padding: .5rem .75rem; border: 1px solid #ced4da;
+            border-radius: .375rem; margin-bottom: .25rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar-must text-center">
+        <a class="navbar-brand" href="/">
+            <i class="fa-solid fa-comments"></i> MUST e-Mrejesho
+        </a>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5">
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <h4 class="mb-3 text-center" style="color: var(--must-green);">
+                            <i class="fa-solid fa-user-shield"></i> Admin Login
+                        </h4>
+                        <p class="text-muted text-center mb-4">Restricted access — MUST e-Mrejesho system administration</p>
+
+                        {% if form.errors and not form.non_field_errors %}
+                        <div class="alert alert-danger py-2">Incorrect username or password. Please try again.</div>
+                        {% endif %}
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger py-2">{{ form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <form method="post" action="{{ app_path }}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Username</label>
+                                {{ form.username }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                {{ form.password }}
+                            </div>
+                            <input type="hidden" name="next" value="{{ next }}">
+                            <button type="submit" class="btn btn-must w-100">Log in</button>
+                        </form>
+
+                        <p class="text-center mt-3 mb-0">
+                            <a href="/accounts/login/">← Back to student/staff login</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

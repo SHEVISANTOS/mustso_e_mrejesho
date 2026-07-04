@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Promises Tracker & Dashboard - MUST e-Mrejesho{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">
+        <i class="fa-solid fa-handshake text-success me-2"></i>Campaign Promises Tracker
+    </h4>
+    {% if user.is_authenticated and user.role == "REPRESENTATIVE" or user.role == "ADMIN" %}
+    <a href="{% url 'accountability:promise_create' %}" class="btn btn-must">
+        <i class="fa-solid fa-plus"></i> Add Promise
+    </a>
+    {% endif %}
+</div>
+
+<!-- KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md col-6">
+        <div class="card shadow-sm border-0 border-start border-primary border-4 h-100">
+            <div class="card-body py-3">
+                <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size: 0.75rem;">Total Promises</small>
+                <h3 class="mb-0 fw-bold">{{ stats.total }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md col-6">
+        <div class="card shadow-sm border-0 border-start border-success border-4 h-100">
+            <div class="card-body py-3">
+                <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size: 0.75rem;">Completed</small>
+                <h3 class="mb-0 fw-bold text-success">{{ stats.completed }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md col-6">
+        <div class="card shadow-sm border-0 border-start border-info border-4 h-100">
+            <div class="card-body py-3">
+                <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size: 0.75rem;">In Progress</small>
+                <h3 class="mb-0 fw-bold text-info">{{ stats.in_progress }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md col-6">
+        <div class="card shadow-sm border-0 border-start border-danger border-4 h-100">
+            <div class="card-body py-3">
+                <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size: 0.75rem;">Stalled</small>
+                <h3 class="mb-0 fw-bold text-danger">{{ stats.stalled }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md col-6">
+        <div class="card shadow-sm border-0 border-start border-warning border-4 h-100">
+            <div class="card-body py-3">
+                <small class="text-muted text-uppercase fw-semibold d-block mb-1" style="font-size: 0.75rem;">Fulfillment Rate</small>
+                <h3 class="mb-0 fw-bold text-dark">{{ stats.completion_rate }}%</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Filters Sidebar -->
+    <div class="col-lg-3 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-filter me-2 text-muted"></i>Filters</h6>
+                
+                <h7 class="fw-semibold text-uppercase text-muted d-block mb-2" style="font-size: 0.7rem;">Status</h7>
+                <div class="list-group list-group-flush mb-4">
+                    <a href="?{% if active_category %}category={{ active_category }}{% endif %}" class="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded {% if not active_status %}bg-success text-white fw-semibold{% endif %}">
+                        All Statuses
+                    </a>
+                    {% for value, label in statuses %}
+                    <a href="?status={{ value }}{% if active_category %}&category={{ active_category }}{% endif %}" class="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded mt-1 {% if active_status == value %}bg-success text-white fw-semibold{% endif %}">
+                        {{ label }}
+                    </a>
+                    {% endfor %}
+                </div>
+
+                <h7 class="fw-semibold text-uppercase text-muted d-block mb-2" style="font-size: 0.7rem;">Category</h7>
+                <div class="list-group list-group-flush">
+                    <a href="?{% if active_status %}status={{ active_status }}{% endif %}" class="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded {% if not active_category %}bg-success text-white fw-semibold{% endif %}">
+                        All Categories
+                    </a>
+                    {% for value, label in categories %}
+                    <a href="?category={{ value }}{% if active_status %}&status={{ active_status }}{% endif %}" class="list-group-item list-group-item-action border-0 px-2 py-1.5 rounded mt-1 {% if active_category == value %}bg-success text-white fw-semibold{% endif %}">
+                        {{ label }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-chart-pie me-2 text-muted"></i>Promise Breakdown</h6>
+                <canvas id="promisesChart" height="200"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Promises List -->
+    <div class="col-lg-9">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3"><i class="fa-solid fa-list me-2 text-muted"></i>Promises List</h6>
+                {% if promises %}
+                <div class="row g-3">
+                    {% for promise in promises %}
+                    <div class="col-md-6">
+                        <div class="card border border-light-subtle h-100 hover-shadow transition">
+                            <div class="card-body d-flex flex-column">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge 
+                                        {% if promise.status == 'COMPLETED' %}bg-success-subtle text-success
+                                        {% elif promise.status == 'IN_PROGRESS' %}bg-primary-subtle text-primary
+                                        {% elif promise.status == 'STALLED' %}bg-danger-subtle text-danger
+                                        {% else %}bg-secondary-subtle text-secondary{% endif %} rounded-pill px-2.5 py-1" style="font-size:0.75rem;">
+                                        {{ promise.get_status_display }}
+                                    </span>
+                                    <span class="text-muted" style="font-size:0.75rem;">
+                                        <i class="fa-solid fa-tag me-1"></i>{{ promise.get_category_display }}
+                                    </span>
+                                </div>
+                                <h5 class="card-title fw-bold mb-1" style="font-size:1.1rem;">
+                                    <a href="{% url 'accountability:promise_detail' promise.pk %}" class="text-decoration-none text-dark">{{ promise.title }}</a>
+                                </h5>
+                                <p class="card-text text-muted small flex-grow-1">
+                                    {{ promise.description|truncatewords:20 }}
+                                </p>
+                                <hr class="my-2 border-light-subtle">
+                                <div class="d-flex justify-content-between align-items-center mt-auto">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white me-2" style="width:28px; height:28px; font-size:0.75rem;">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <span class="small text-muted">{{ promise.representative.get_full_name|default:promise.representative.username }}</span>
+                                    </div>
+                                    {% if promise.target_date %}
+                                    <span class="small text-muted" style="font-size:0.75rem;"><i class="fa-regular fa-calendar-check me-1"></i>{{ promise.target_date|date:"d M Y" }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fa-solid fa-handshake-slash fa-2x mb-3 text-secondary"></i>
+                    <p class="mb-0">No promises found matching filters.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-shadow:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+        border-color: var(--must-green) !important;
+    }
+    .transition {
+        transition: all 0.2s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+    const ctx = document.getElementById('promisesChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'In Progress', 'Stalled', 'Not Started'],
+                datasets: [{
+                    data: [{{ stats.completed }}, {{ stats.in_progress }}, {{ stats.stalled }}, {{ stats.not_started }}],
+                    backgroundColor: ['#198754', '#0d6efd', '#dc3545', '#6c757d'],
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 10 }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
