@@ -59,9 +59,11 @@ def promise_dashboard(request):
     return render(request, "accountability/promise_dashboard.html", context)
 
 
+@login_required
 def promise_detail(request, pk):
     """View detail of a campaign promise with evidence."""
     promise = get_object_or_404(Promise, pk=pk)
+    # Only authenticated users can edit; admins or the owning representative may edit
     can_edit = request.user.is_authenticated and (
         request.user.role == User.Role.ADMIN or request.user == promise.representative
     )

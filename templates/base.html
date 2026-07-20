@@ -34,43 +34,51 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-must mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-must mb-4">
         <div class="container">
             <a class="navbar-brand fw-bold" href="{% url 'feedback:dashboard' %}">
                 <i class="fa-solid fa-comments"></i> MUST e-Mrejesho
             </a>
 
-            <div class="navbar-nav me-auto flex-row gap-3 ms-3">
-                <a class="nav-link py-1" href="{% url 'accountability:promise_dashboard' %}"><i class="fa-solid fa-handshake"></i> Promises</a>
-                <a class="nav-link py-1" href="{% url 'accountability:rep_list' %}"><i class="fa-solid fa-user-tie"></i> Representatives</a>
-                <a class="nav-link py-1" href="{% url 'accountability:document_list' %}"><i class="fa-solid fa-folder-open"></i> Documents</a>
-            </div>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
 
-            {% if user.is_authenticated %}
-            <!-- FIX APPLIED: Added flex-wrap, justify-content-end, and gap-2 for responsive stacking -->
-            <div class="d-flex align-items-center flex-wrap justify-content-end gap-2">
-                {% if user.role == "ADMIN" %}
-                <!-- FIX APPLIED: Removed me-2 -->
-                <a href="{% url 'adminpanel:analytics' %}" class="btn btn-outline-light btn-sm">
-                    <i class="fa-solid fa-gauge-high"></i> Admin Panel
-                </a>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link py-1" href="{% url 'accountability:promise_dashboard' %}"><i class="fa-solid fa-handshake"></i> Promises</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link py-1" href="{% url 'accountability:rep_list' %}"><i class="fa-solid fa-user-tie"></i> Representatives</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link py-1" href="{% url 'accountability:document_list' %}"><i class="fa-solid fa-folder-open"></i> Documents</a>
+                    </li>
+                </ul>
+
+                {% if user.is_authenticated %}
+                <div class="d-flex align-items-center flex-wrap justify-content-lg-end gap-2 mt-3 mt-lg-0">
+                    {% if user.role == "ADMIN" %}
+                    <a href="{% url 'adminpanel:analytics' %}" class="btn btn-outline-light btn-sm">
+                        <i class="fa-solid fa-gauge-high"></i> Admin Panel
+                    </a>
+                    {% endif %}
+                    
+                    <span class="text-white">{{ user.get_full_name|default:user.username }} <span class="badge badge-must">{{ user.get_role_display }}</span></span>
+                    
+                    <a href="{% url 'notifications:list' %}" class="btn btn-outline-light btn-sm position-relative">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="unread-badge" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="display:none;">0</span>
+                    </a>
+                    
+                    <form method="post" action="{% url 'accounts:logout' %}" class="d-inline m-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                    </form>
+                </div>
                 {% endif %}
-                
-                <!-- FIX APPLIED: Removed me-3 -->
-                <span class="text-white">{{ user.get_full_name|default:user.username }} <span class="badge badge-must">{{ user.get_role_display }}</span></span>
-                
-                <!-- FIX APPLIED: Removed me-2 -->
-                <a href="{% url 'notifications:list' %}" class="btn btn-outline-light btn-sm position-relative">
-                    <i class="fa-solid fa-bell"></i>
-                    <span id="unread-badge" class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="display:none;">0</span>
-                </a>
-                
-                <form method="post" action="{% url 'accounts:logout' %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-                </form>
             </div>
-            {% endif %}
         </div>
     </nav>
 

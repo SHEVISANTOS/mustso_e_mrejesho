@@ -1,6 +1,7 @@
 import logging
 from django.core.exceptions import PermissionDenied
-from .models import RepresentativeProfile, Promise, Feedback
+from .models import RepresentativeProfile, Promise
+from feedback.models import Feedback
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +11,10 @@ def check_permission(user, obj, role_required):
     """
     if not user.is_authenticated:
         raise PermissionDenied('Authentication required.')
-    if user.role == role_required or user.role == getattr(user, 'Role', None).ADMIN:
+    # Import User model dynamically to access Role enum
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    if user.role == role_required or user.role == User.Role.ADMIN:
         return True
     if hasattr(obj, 'representative') and obj.representative == user:
         return True

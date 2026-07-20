@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-@w8hyiy627%04$-a0ckh5spk^usb&=lp*6-4p%gkm16)i)46jq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1' , '192.168.3.2']
 # For deployment, add your real domain, e.g. ALLOWED_HOSTS = ['mrejesho.must.ac.tz']
 
 
@@ -35,8 +35,6 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 INSTALLED_APPS = [
     'daphne',
-    'channels',
-    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -49,13 +47,12 @@ INSTALLED_APPS = [
     'notifications',
     'adminpanel',
     'accountability',
+    'channels',
 ]
 
 ASGI_APPLICATION = 'must_mrejesho.asgi.application'
 
-# In-memory channel layer: works out of the box for a single-process demo
-# (i.e. `python manage.py runserver`). For production with multiple workers,
-# swap this for channels_redis — see README.
+# In-memory channel layer configuration (requires channels package)
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer',
