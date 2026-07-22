@@ -1,8 +1,15 @@
 {
+  "version": 2,
   "builds": [
-    { "src": "vercel_app.py", "use": "@vercel/python" }
+    {
+      "src": "mustso_e_mrejesho/wsgi.py",
+      "use": "@vercel/python"
+    }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "vercel_app.py" }
+    {
+      "src": "/(.*)",
+      "dest": "mustso_e_mrejesho/wsgi.py"
+    }
   ]
 }
