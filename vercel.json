@@ -2,14 +2,14 @@
   "version": 2,
   "builds": [
     {
-      "src": "mustso_e_mrejesho/wsgi.py",
+      "src": "must_mrejesho/wsgi.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "mustso_e_mrejesho/wsgi.py"
+      "dest": "must_mrejesho/wsgi.py"
     }
   ]
 }
