@@ -36,7 +36,6 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1' , '192.168.3.2','.vercel.app', '.now.s
 # Application definition
 
 INSTALLED_APPS = [
-    'daphne',
     'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,17 +49,16 @@ INSTALLED_APPS = [
     'notifications',
     'adminpanel',
     'accountability',
-    'channels',
 ]
 
-ASGI_APPLICATION = 'must_mrejesho.asgi.application'
+#ASGI_APPLICATION = 'must_mrejesho.asgi.application'
 
 # In-memory channel layer configuration (requires channels package)
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
-    }
-}
+#CHANNEL_LAYERS = {
+ #   'default': {
+  #      'BACKEND': 'channels.layers.InMemoryChannelLayer',
+   # }
+#}
 
 AUTH_USER_MODEL = 'accounts.User'
 
