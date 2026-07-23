@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'notifications',
     'adminpanel',
     'accountability',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 #ASGI_APPLICATION = 'must_mrejesho.asgi.application'
@@ -59,6 +61,18 @@ INSTALLED_APPS = [
   #      'BACKEND': 'channels.layers.InMemoryChannelLayer',
    # }
 #}
+
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
+# Add your Cloudinary credentials (Get these from cloudinary.com)
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'clqakrtn',     
+    'API_KEY': '266267621113174',            
+    'API_SECRET': 'udKqlJjIClcmHOR59q7EtagyO_k',      
+}
+
+# Keep this for local development, but Cloudinary will handle production
+MEDIA_URL = '/media/'
 
 AUTH_USER_MODEL = 'accounts.User'
 
