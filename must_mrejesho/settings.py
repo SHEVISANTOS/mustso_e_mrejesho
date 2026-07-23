@@ -62,7 +62,15 @@ INSTALLED_APPS = [
    # }
 #}
 
-DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+STORAGES = {
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 
 # Add your Cloudinary credentials (Get these from cloudinary.com)
 CLOUDINARY_STORAGE = {
